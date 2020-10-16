@@ -91,7 +91,7 @@ namespace
         auto dump_info = cv::gapi::getCompileArg<cv::graph_dump_path>(args);
         if (!dump_info.has_value())
         {
-            const char* path = std::getenv("GRAPH_DUMP_PATH");
+            const char* path = getenv("GRAPH_DUMP_PATH");
             return path
                 ? cv::util::make_optional(std::string(path))
                 : cv::util::optional<std::string>();

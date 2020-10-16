@@ -7,6 +7,7 @@
 #include <set> // set
 #include <map> // map
 #include <ade/util/zip_range.hpp> // indexed
+#include <stdint.h>
 
 #define NOMINMAX
 
@@ -20,10 +21,52 @@
 
 #include "backends/common/serialization.hpp"
 
+
 namespace cv {
 namespace gapi {
 namespace s11n {
 namespace {
+
+
+
+uint16_t _htons(uint16_t v)
+{
+    uint16_t temp = 0x1234;
+    uint8_t* tempChar = (uint8_t*)&temp;
+
+    if (*tempChar == 0x34)
+    {
+        return (v >> 8) | (v << 8);
+    }
+    else
+    {
+        return v;
+    }
+}
+uint32_t _htonl(uint32_t v)
+{
+    uint16_t temp = 0x1234;
+    uint8_t* tempChar = (uint8_t*)&temp;
+
+    if (*tempChar == 0x34)
+    {
+        return _htons(v >> 16) | (_htons((uint16_t)v) << 16);
+    }
+    else
+    {
+        return v;
+    }
+}
+
+
+uint16_t _ntohs(uint16_t v) {
+    return _htons(v);
+}
+uint32_t _ntohl(uint32_t v) {
+    return _htonl(v);
+}
+
+
 
 void putData(GSerialized& s, const cv::gimpl::GModel::ConstGraph& cg, const ade::NodeHandle &nh) {
     const auto gdata = cg.metadata(nh).get<gimpl::Data>();
@@ -762,14 +805,14 @@ IOStream& ByteMemoryOutStream::operator<< (float atom) {
     static_assert(sizeof(float) == 4, "Expecting sizeof(float) == 4");
     uint32_t tmp = 0u;
     memcpy(&tmp, &atom, sizeof(float));
-    return *this << static_cast<uint32_t>(htonl(tmp));
+    return *this << static_cast<uint32_t>(_htonl(tmp));
 }
 IOStream& ByteMemoryOutStream::operator<< (double atom) {
     static_assert(sizeof(double) == 8, "Expecting sizeof(double) == 8");
     uint32_t tmp[2] = {0u};
     memcpy(tmp, &atom, sizeof(double));
-    *this << static_cast<uint32_t>(htonl(tmp[0]));
-    *this << static_cast<uint32_t>(htonl(tmp[1]));
+    *this << static_cast<uint32_t>(_htonl(tmp[0]));
+    *this << static_cast<uint32_t>(_htonl(tmp[1]));
     return *this;
 }
 IOStream& ByteMemoryOutStream::operator<< (const std::string &str) {
@@ -849,13 +892,13 @@ IIStream& ByteMemoryInStream::operator>> (int& atom) {
 //}
 IIStream& ByteMemoryInStream::operator>> (float& atom) {
     static_assert(sizeof(float) == 4, "Expecting sizeof(float) == 4");
-    uint32_t tmp = ntohl(getU32());
+    uint32_t tmp = _ntohl(getU32());
     memcpy(&atom, &tmp, sizeof(float));
     return *this;
 }
 IIStream& ByteMemoryInStream::operator>> (double& atom) {
     static_assert(sizeof(double) == 8, "Expecting sizeof(double) == 8");
-    uint32_t tmp[2] = {ntohl(getU32()), ntohl(getU32())};
+    uint32_t tmp[2] = {_ntohl(getU32()), _ntohl(getU32())};
     memcpy(&atom, tmp, sizeof(double));
     return *this;
 }
