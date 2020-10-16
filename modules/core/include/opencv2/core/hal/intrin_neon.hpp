@@ -104,18 +104,110 @@ CV_CPU_OPTIMIZATION_HAL_NAMESPACE_BEGIN
 #define OPENCV_HAL_IMPL_NEON_UTILS_SUFFIX_F64(_Tpv, _Tpvl, suffix) \
     OPENCV_HAL_IMPL_NEON_UNZIP(_Tpv##_t, _Tpv##x2_t, suffix)
 
-OPENCV_HAL_IMPL_NEON_UTILS_SUFFIX(uint8x16, uint8x8,  u8)
-OPENCV_HAL_IMPL_NEON_UTILS_SUFFIX(int8x16,  int8x8,   s8)
-OPENCV_HAL_IMPL_NEON_UTILS_SUFFIX(uint16x8, uint16x4, u16)
-OPENCV_HAL_IMPL_NEON_UTILS_SUFFIX(int16x8,  int16x4,  s16)
-OPENCV_HAL_IMPL_NEON_UTILS_SUFFIX(uint32x4, uint32x2, u32)
-OPENCV_HAL_IMPL_NEON_UTILS_SUFFIX(int32x4,  int32x2,  s32)
-OPENCV_HAL_IMPL_NEON_UTILS_SUFFIX(float32x4, float32x2, f32)
-OPENCV_HAL_IMPL_NEON_UTILS_SUFFIX_I64(uint64x2, uint64x1, u64)
-OPENCV_HAL_IMPL_NEON_UTILS_SUFFIX_I64(int64x2,  int64x1,  s64)
-#if CV_SIMD128_64F
-OPENCV_HAL_IMPL_NEON_UTILS_SUFFIX_F64(float64x2, float64x1,f64)
-#endif
+//OPENCV_HAL_IMPL_NEON_UTILS_SUFFIX(uint8x16, uint8x8,  u8)
+//OPENCV_HAL_IMPL_NEON_UTILS_SUFFIX(int8x16,  int8x8,   s8)
+//OPENCV_HAL_IMPL_NEON_UTILS_SUFFIX(uint16x8, uint16x4, u16)
+//OPENCV_HAL_IMPL_NEON_UTILS_SUFFIX(int16x8, int16x4, s16)
+//OPENCV_HAL_IMPL_NEON_UTILS_SUFFIX(uint32x4, uint32x2, u32)
+//OPENCV_HAL_IMPL_NEON_UTILS_SUFFIX(int32x4, int32x2, s32)
+//OPENCV_HAL_IMPL_NEON_UTILS_SUFFIX(float32x4, float32x2, f32)
+//OPENCV_HAL_IMPL_NEON_UTILS_SUFFIX_I64(uint64x2, uint64x1, u64)
+//OPENCV_HAL_IMPL_NEON_UTILS_SUFFIX_I64(int64x2, int64x1, s64)
+//#if CV_SIMD128_64F
+//OPENCV_HAL_IMPL_NEON_UTILS_SUFFIX_F64(float64x2, float64x1, f64)
+//#endif
+
+//OPENCV_HAL_IMPL_NEON_UTILS_SUFFIX(uint8x16, uint8x8,  u8)
+//#define OPENCV_HAL_IMPL_NEON_UTILS_SUFFIX(_Tpv, _Tpvl, suffix) \
+//OPENCV_HAL_IMPL_NEON_REINTERPRET(_Tpv##_t, suffix)
+//template <typename T> static inline 
+//uint8x16 vreinterpretq_u8_f64(T a) { return (_Tpv)a; } \
+//    template <typename T> static inline \
+//    float64x2_t vreinterpretq_f64_##suffix(T a) { return (float64x2_t) a; }
+inline void _v128_unzip_u8(__n128&& a, __n128&& b, __n128& c, __n128& d) 
+{
+    c = vuzp1q_u8(a, b); d = vuzp2q_u8(a, b);
+}
+inline void _v128_unzip_u8(__n64& a, __n64& b, __n64& c, __n64& d)
+{
+    c = vuzp1_u8(a, b); d = vuzp2_u8(a, b);
+}
+inline void _v128_unzip_s8(__n128& a, __n128& b, __n128& c, __n128& d)
+{
+    c = vuzp1q_s8(a, b); d = vuzp2q_s8(a, b);
+}
+inline void _v128_unzip_s8(__n64& a, __n64& b, __n64& c, __n64& d)
+{
+    c = vuzp1_s8(a, b); d = vuzp2_s8(a, b);
+}
+inline void _v128_unzip_u16(__n128& a, __n128& b, __n128& c, __n128& d)
+{
+    c = vuzp1q_u16(a, b); d = vuzp2q_u16(a, b);
+}
+inline void _v128_unzip_u16(__n64& a, __n64& b, __n64& c, __n64& d)
+{
+    c = vuzp1_u16(a, b); d = vuzp2_u16(a, b);
+}
+inline void _v128_unzip_s16(__n128 a, __n128 b, __n128& c, __n128& d)
+{
+    c = vuzp1q_s16(a, b); d = vuzp2q_s16(a, b);
+}
+inline void _v128_unzip_s16(__n64 a, __n64 b, __n64& c, __n64& d)
+{
+    c = vuzp1_s16(a, b); d = vuzp2_s16(a, b);
+}
+inline void _v128_unzip_u32(__n128 a, __n128 b, __n128& c, __n128& d)
+{
+    c = vuzp1q_u32(a, b); d = vuzp2q_u32(a, b);
+}
+inline void _v128_unzip_u32(__n64 a, __n64 b, __n64& c, __n64& d)
+{
+    c = vuzp1_u32(a, b); d = vuzp2_u32(a, b);
+}
+inline void _v128_unzip_s32(__n128 a, __n128 b, __n128& c, __n128& d)
+{
+    c = vuzp1q_s32(a, b); d = vuzp2q_s32(a, b);
+}
+inline void _v128_unzip_s32(__n64 a, __n64 b, __n64& c, __n64& d)
+{
+    c = vuzp1_s32(a, b); d = vuzp2_s32(a, b);
+}
+
+inline void _v128_unzip_f32(__n128& a, __n128& b, __n128& c, __n128& d)
+{
+    c = vuzp1q_f32(a, b); d = vuzp2q_f32(a, b);
+}
+inline void _v128_unzip_f32(__n64& a, __n64& b, __n64& c, __n64& d)
+{
+    c = vuzp1_f32(a, b); d = vuzp2_f32(a, b);
+}
+inline void _v128_unzip_u64(__n128& a, __n128& b, __n128& c, __n128& d)
+{
+    c = vuzp1q_u64(a, b); d = vuzp2q_u64(a, b);
+}
+//inline void _v128_unzip_u64(__n64& a, __n64& b, __n64& c, __n64& d)
+//{
+//    c = vuzp1_u64(a, b); d = vuzp2_u64(a, b);
+//}
+inline void _v128_unzip_s64(__n128& a, __n128& b, __n128& c, __n128& d)
+{
+    c = vuzp1q_s64(a, b); d = vuzp2q_s64(a, b);
+}
+//inline void _v128_unzip_s64(__n64& a, __n64& b, __n64& c, __n64& d)
+//{
+//    c = vuzp1_s64(a, b); d = vuzp2_s64(a, b);
+//}
+
+inline void _v128_unzip_f64(__n128& a, __n128& b, __n128& c, __n128& d)
+{
+    c = vuzp1q_f64(a, b); d = vuzp2q_f64(a, b);
+}
+
+//inline void _v128_unzip_f64(__n64& a, __n64& b, __n64& c, __n64& d)
+//{
+//    c = vuzp1_f64(a, b); d = vuzp2_f64(a, b);
+//}
+
 
 //////////// Types ////////////
 
@@ -571,10 +663,12 @@ inline v_uint16x8 v_mul_hi(const v_uint16x8& a, const v_uint16x8& b)
 //////// Dot Product ////////
 
 // 16 >> 32
-inline v_int32x4 v_dotprod(const v_int16x8& a, const v_int16x8& b)
+//inline v_int32x4 v_dotprod(const v_int16x8& a, const v_int16x8& b)
+inline v_int32x4 v_dotprod(v_int16x8 a, v_int16x8 b)
 {
     int16x8_t uzp1, uzp2;
-    _v128_unzip(a.val, b.val, uzp1, uzp2);
+//    _v128_unzip(a.val, b.val, uzp1, uzp2);
+    _v128_unzip_s16(a.val, b.val, uzp1, uzp2);
     int16x4_t a0 = vget_low_s16(uzp1);
     int16x4_t b0 = vget_high_s16(uzp1);
     int16x4_t a1 = vget_low_s16(uzp2);
@@ -582,10 +676,12 @@ inline v_int32x4 v_dotprod(const v_int16x8& a, const v_int16x8& b)
     int32x4_t p = vmull_s16(a0, b0);
     return v_int32x4(vmlal_s16(p, a1, b1));
 }
-inline v_int32x4 v_dotprod(const v_int16x8& a, const v_int16x8& b, const v_int32x4& c)
+//inline v_int32x4 v_dotprod(const v_int16x8& a, const v_int16x8& b, const v_int32x4& c)
+inline v_int32x4 v_dotprod(v_int16x8 a, v_int16x8 b, v_int32x4 c)
 {
     int16x8_t uzp1, uzp2;
-    _v128_unzip(a.val, b.val, uzp1, uzp2);
+//    _v128_unzip(a.val, b.val, uzp1, uzp2);
+    _v128_unzip_s16(a.val, b.val, uzp1, uzp2);
     int16x4_t a0 = vget_low_s16(uzp1);
     int16x4_t b0 = vget_high_s16(uzp1);
     int16x4_t a1 = vget_low_s16(uzp2);
@@ -595,10 +691,12 @@ inline v_int32x4 v_dotprod(const v_int16x8& a, const v_int16x8& b, const v_int32
 }
 
 // 32 >> 64
-inline v_int64x2 v_dotprod(const v_int32x4& a, const v_int32x4& b)
+//inline v_int64x2 v_dotprod(const v_int32x4& a, const v_int32x4& b)
+inline v_int64x2 v_dotprod(v_int32x4& a, v_int32x4& b)
 {
     int32x4_t uzp1, uzp2;
-    _v128_unzip(a.val, b.val, uzp1, uzp2);
+//    _v128_unzip(a.val, b.val, uzp1, uzp2);
+    _v128_unzip_s32(a.val, b.val, uzp1, uzp2);
     int32x2_t a0 = vget_low_s32(uzp1);
     int32x2_t b0 = vget_high_s32(uzp1);
     int32x2_t a1 = vget_low_s32(uzp2);
@@ -606,10 +704,12 @@ inline v_int64x2 v_dotprod(const v_int32x4& a, const v_int32x4& b)
     int64x2_t p = vmull_s32(a0, b0);
     return v_int64x2(vmlal_s32(p, a1, b1));
 }
-inline v_int64x2 v_dotprod(const v_int32x4& a, const v_int32x4& b, const v_int64x2& c)
+//inline v_int64x2 v_dotprod(const v_int32x4& a, const v_int32x4& b, const v_int64x2& c)
+inline v_int64x2 v_dotprod(v_int32x4& a, v_int32x4& b, v_int64x2& c)
 {
     int32x4_t uzp1, uzp2;
-    _v128_unzip(a.val, b.val, uzp1, uzp2);
+//    _v128_unzip(a.val, b.val, uzp1, uzp2);
+    _v128_unzip_s32(a.val, b.val, uzp1, uzp2);
     int32x2_t a0 = vget_low_s32(uzp1);
     int32x2_t b0 = vget_high_s32(uzp1);
     int32x2_t a1 = vget_low_s32(uzp2);
@@ -651,7 +751,8 @@ inline v_uint32x4 v_dotprod_expand(const v_uint8x16& a, const v_uint8x16& b,
 #endif
 }
 
-inline v_int32x4 v_dotprod_expand(const v_int8x16& a, const v_int8x16& b)
+//inline v_int32x4 v_dotprod_expand(const v_int8x16& a, const v_int8x16& b)
+inline v_int32x4 v_dotprod_expand(v_int8x16& a, v_int8x16& b)
 {
 #if CV_NEON_DOT
     return v_int32x4(vdotq_s32(vdupq_n_s32(0), a.val, b.val));
@@ -659,15 +760,19 @@ inline v_int32x4 v_dotprod_expand(const v_int8x16& a, const v_int8x16& b)
     int16x8_t p0  = vmull_s8(vget_low_s8(a.val), vget_low_s8(b.val));
     int16x8_t p1  = vmull_s8(vget_high_s8(a.val), vget_high_s8(b.val));
     int16x8_t uzp1, uzp2;
-    _v128_unzip(p0, p1, uzp1, uzp2);
+//    _v128_unzip(p0, p1, uzp1, uzp2);
+    _v128_unzip_s16(p0, p1, uzp1, uzp2);
     int16x8_t sum = vaddq_s16(uzp1, uzp2);
     int16x4_t uzpl1, uzpl2;
-    _v128_unzip(vget_low_s16(sum), vget_high_s16(sum), uzpl1, uzpl2);
+//    _v128_unzip(vget_low_s16(sum), vget_high_s16(sum), uzpl1, uzpl2);
+    _v128_unzip_s16(vget_low_s16(sum), vget_high_s16(sum), uzpl1, uzpl2);
     return v_int32x4(vaddl_s16(uzpl1, uzpl2));
 #endif
 }
-inline v_int32x4 v_dotprod_expand(const v_int8x16& a, const v_int8x16& b,
-                                  const v_int32x4& c)
+//inline v_int32x4 v_dotprod_expand(const v_int8x16& a, const v_int8x16& b,
+//                                  const v_int32x4& c)
+inline v_int32x4 v_dotprod_expand(v_int8x16& a, v_int8x16& b,
+                                  v_int32x4& c)
 {
 #if CV_NEON_DOT
     return v_int32x4(vdotq_s32(c.val, a.val, b.val));
@@ -687,7 +792,8 @@ inline v_uint64x2 v_dotprod_expand(const v_uint16x8& a, const v_uint16x8& b)
     uint32x4_t odd  = vmulq_u32(vshrq_n_u32(vreinterpretq_u32_u16(a.val), 16),
                                 vshrq_n_u32(vreinterpretq_u32_u16(b.val), 16));
     uint32x4_t uzp1, uzp2;
-    _v128_unzip(even, odd, uzp1, uzp2);
+//    _v128_unzip(even, odd, uzp1, uzp2);
+    _v128_unzip_u32(even, odd, uzp1, uzp2);
     uint64x2_t s0  = vaddl_u32(vget_low_u32(uzp1), vget_high_u32(uzp1));
     uint64x2_t s1  = vaddl_u32(vget_low_u32(uzp2), vget_high_u32(uzp2));
     return v_uint64x2(vaddq_u64(s0, s1));
@@ -701,11 +807,13 @@ inline v_int64x2 v_dotprod_expand(const v_int16x8& a, const v_int16x8& b)
     int32x4_t p1  = vmull_s16(vget_high_s16(a.val), vget_high_s16(b.val));
 
     int32x4_t uzp1, uzp2;
-    _v128_unzip(p0, p1, uzp1, uzp2);
+ //   _v128_unzip(p0, p1, uzp1, uzp2);
+    _v128_unzip_s32(p0, p1, uzp1, uzp2); 
     int32x4_t sum = vaddq_s32(uzp1, uzp2);
 
     int32x2_t uzpl1, uzpl2;
-    _v128_unzip(vget_low_s32(sum), vget_high_s32(sum), uzpl1, uzpl2);
+//    _v128_unzip(vget_low_s32(sum), vget_high_s32(sum), uzpl1, uzpl2);
+    _v128_unzip_s32(vget_low_s32(sum), vget_high_s32(sum), uzpl1, uzpl2);
     return v_int64x2(vaddl_s32(uzpl1, uzpl2));
 }
 inline v_int64x2 v_dotprod_expand(const v_int16x8& a, const v_int16x8& b,
@@ -714,10 +822,13 @@ inline v_int64x2 v_dotprod_expand(const v_int16x8& a, const v_int16x8& b,
 
 // 32 >> 64f
 #if CV_SIMD128_64F
-inline v_float64x2 v_dotprod_expand(const v_int32x4& a, const v_int32x4& b)
+//inline v_float64x2 v_dotprod_expand(const v_int32x4& a, const v_int32x4& b)
+inline v_float64x2 v_dotprod_expand(v_int32x4& a, v_int32x4& b)
 { return v_cvt_f64(v_dotprod(a, b)); }
-inline v_float64x2 v_dotprod_expand(const v_int32x4& a,   const v_int32x4& b,
-                                    const v_float64x2& c)
+//inline v_float64x2 v_dotprod_expand(const v_int32x4& a,   const v_int32x4& b,
+//                                    const v_float64x2& c)
+inline v_float64x2 v_dotprod_expand( v_int32x4& a,   v_int32x4& b,
+                                    v_float64x2& c)									
 { return v_dotprod_expand(a, b) + c; }
 #endif
 
@@ -1701,12 +1812,13 @@ OPENCV_HAL_IMPL_NEON_BROADCAST(v_float64x2, double, f64)
 inline v_int32x4 v_round(const v_float32x4& a)
 {
     float32x4_t a_ = a.val;
-    int32x4_t result;
-    __asm__ ("fcvtns %0.4s, %1.4s"
-             : "=w"(result)
-             : "w"(a_)
-             : /* No clobbers */);
-    return v_int32x4(result);
+//    int32x4_t result;
+//    __asm__ ("fcvtns %0.4s, %1.4s"
+//             : "=w"(result)
+//             : "w"(a_)
+//             : /* No clobbers */);
+//    return v_int32x4(result);
+    return v_int32x4(neon_fcvtnsq32(a_));
 }
 #else
 inline v_int32x4 v_round(const v_float32x4& a)

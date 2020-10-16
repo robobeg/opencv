@@ -42,7 +42,10 @@
 
 #ifndef __OPENCV_PRECOMP_H__
 #define __OPENCV_PRECOMP_H__
+#ifdef ENABLE_ST_PROFILER
 
+#include "../../profiler/SimpleThreadProfiler.h"
+#endif //ENABLE_ST_PROFILER
 #include "opencv2/video.hpp"
 #include "opencv2/core/utility.hpp"
 #include "opencv2/core/private.hpp"

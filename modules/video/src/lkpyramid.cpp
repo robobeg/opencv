@@ -50,7 +50,14 @@
 #endif
 
 #include "opencv2/core/openvx/ovx_defs.hpp"
-
+#ifdef ENABLE_ST_PROFILER
+DECLARE_ST_PROFILER(calcOpticalPyrLKBuildPyr)
+DECLARE_ST_PROFILER(calcOpticalPyrLKLastLoop)
+DECLARE_ST_PROFILER(calcOpticalPyrLKTotal)
+DECLARE_ST_PROFILER(buildOpticalPyrTotal)
+DebugLogger sDebugLogger;
+DECLARE_ST_PROFILER(caclOpticalProfiler)
+#endif //ENABLE_ST_PROFILER
 #define  CV_DESCALE(x,n)     (((x) + (1 << ((n)-1))) >> (n))
 
 namespace
@@ -726,6 +733,9 @@ void cv::detail::LKTrackerInvoker::operator()(const Range& range) const
 int cv::buildOpticalFlowPyramid(InputArray _img, OutputArrayOfArrays pyramid, Size winSize, int maxLevel, bool withDerivatives,
                                 int pyrBorder, int derivBorder, bool tryReuseInputImage)
 {
+#ifdef ENABLE_ST_PROFILER
+    ST_PROFILER(buildOpticalPyrTotal, &sDebugLogger);
+#endif //ENABLE_ST_PROFILER
     CV_INSTRUMENT_REGION();
 
     Mat img = _img.getMat();
@@ -940,7 +950,9 @@ namespace
             return true;
         }
 #endif
-
+#ifdef ENABLE_ST_PROFILER
+        DebugLogger m_DebugLogger;
+#endif //ENABLE_ST_PROFILER
         Size winSize;
         int maxLevel;
         TermCriteria criteria;
@@ -1237,6 +1249,9 @@ void SparsePyrLKOpticalFlowImpl::calc( InputArray _prevImg, InputArray _nextImg,
                            InputArray _prevPts, InputOutputArray _nextPts,
                            OutputArray _status, OutputArray _err)
 {
+#ifdef ENABLE_ST_PROFILER
+    ST_PROFILER(calcOpticalPyrLKTotal, &m_DebugLogger);
+#endif //ENABLE_ST_PROFILER
     CV_INSTRUMENT_REGION();
 
     CV_OCL_RUN(ocl::isOpenCLActivated() &&
@@ -1351,6 +1366,19 @@ void SparsePyrLKOpticalFlowImpl::calc( InputArray _prevImg, InputArray _nextImg,
         if(levels2 < maxLevel)
             maxLevel = levels2;
     }
+#ifdef ENABLE_ST_PROFILER
+    {
+
+        ST_PROFILER(calcOpticalPyrLKBuildPyr, &m_DebugLogger);
+
+        if (levels1 < 0)
+            maxLevel = buildOpticalFlowPyramid(_prevImg, prevPyr, winSize, maxLevel, false);
+
+        if (levels2 < 0)
+            maxLevel = buildOpticalFlowPyramid(_nextImg, nextPyr, winSize, maxLevel, false);
+
+    }
+#else //ENABLE_ST_PROFILER
 
     if (levels1 < 0)
         maxLevel = buildOpticalFlowPyramid(_prevImg, prevPyr, winSize, maxLevel, false);
@@ -1358,6 +1386,9 @@ void SparsePyrLKOpticalFlowImpl::calc( InputArray _prevImg, InputArray _nextImg,
     if (levels2 < 0)
         maxLevel = buildOpticalFlowPyramid(_nextImg, nextPyr, winSize, maxLevel, false);
 
+
+
+#endif //ENABLE_ST_PROFILER    
     if( (criteria.type & TermCriteria::COUNT) == 0 )
         criteria.maxCount = 30;
     else
@@ -1373,6 +1404,47 @@ void SparsePyrLKOpticalFlowImpl::calc( InputArray _prevImg, InputArray _nextImg,
     if(lvlStep1 == 1)
         derivIBuf.create(prevPyr[0].rows + winSize.height*2, prevPyr[0].cols + winSize.width*2, CV_MAKETYPE(derivDepth, prevPyr[0].channels() * 2));
 
+#ifdef ENABLE_ST_PROFILER
+
+
+    {
+
+        ST_PROFILER(calcOpticalPyrLKLastLoop, &m_DebugLogger);
+
+   
+        for( level = maxLevel; level >= 0; level-- )
+        {
+            Mat derivI;
+            if(lvlStep1 == 1)
+            {
+                Size imgSize = prevPyr[level * lvlStep1].size();
+                Mat _derivI( imgSize.height + winSize.height*2,
+                    imgSize.width + winSize.width*2, derivIBuf.type(), derivIBuf.ptr() );
+                derivI = _derivI(Rect(winSize.width, winSize.height, imgSize.width, imgSize.height));
+                calcSharrDeriv(prevPyr[level * lvlStep1], derivI);
+                copyMakeBorder(derivI, _derivI, winSize.height, winSize.height, winSize.width, winSize.width, BORDER_CONSTANT|BORDER_ISOLATED);
+            }
+            else
+                derivI = prevPyr[level * lvlStep1 + 1];
+
+            CV_Assert(prevPyr[level * lvlStep1].size() == nextPyr[level * lvlStep2].size());
+            CV_Assert(prevPyr[level * lvlStep1].type() == nextPyr[level * lvlStep2].type());
+
+            typedef cv::detail::LKTrackerInvoker LKTrackerInvoker;
+            /*LKTrackerInvoker test(prevPyr[level * lvlStep1], derivI,
+                nextPyr[level * lvlStep2], prevPts, nextPts,
+                status, err,
+                winSize, criteria, level, maxLevel,
+                flags, (float)minEigThreshold);
+            test(Range(0, npoints));*/
+            parallel_for_(Range(0, npoints), LKTrackerInvoker(prevPyr[level * lvlStep1], derivI,
+                                                              nextPyr[level * lvlStep2], prevPts, nextPts,
+                                                              status, err,
+                                                              winSize, criteria, level, maxLevel,
+                                                              flags, (float)minEigThreshold));
+        }
+}
+#else //ENABLE_ST_PROFILER    
     for( level = maxLevel; level >= 0; level-- )
     {
         Mat derivI;
@@ -1398,6 +1470,12 @@ void SparsePyrLKOpticalFlowImpl::calc( InputArray _prevImg, InputArray _nextImg,
                                                           winSize, criteria, level, maxLevel,
                                                           flags, (float)minEigThreshold));
     }
+
+
+
+
+#endif //ENABLE_ST_PROFILER
+    
 }
 
 } // namespace

@@ -39,17 +39,20 @@ Param(
     [parameter(Mandatory=$False)]
     [Array]
     [ValidateNotNull()]
-    $PLATFORMS_IN = "WP",
+#    $PLATFORMS_IN = "WP",
+    $PLATFORMS_IN = "WS",    
 
     [parameter(Mandatory=$False)]
     [Array]
     [ValidateNotNull()]
-    $VERSIONS_IN = "8.1",
+#    $VERSIONS_IN = "8.1",
+    $VERSIONS_IN = "10.0",    
 
     [parameter(Mandatory=$False)]
     [Array]
     [ValidateNotNull()]
-    $ARCHITECTURES_IN = "x86",
+#    $ARCHITECTURES_IN = "x86",
+    $ARCHITECTURES_IN = "x64",    
 
     [parameter(Mandatory=$False)]
     [String]
@@ -58,8 +61,10 @@ Param(
     [parameter(Mandatory=$False)]
     [String]
     [ValidateNotNull()]
-    [ValidateSet("Visual Studio 15 2017","Visual Studio 14 2015","Visual Studio 12 2013","Visual Studio 11 2012")]
-    $GENERATOR = "Visual Studio 15 2017",
+#    [ValidateSet("Visual Studio 15 2017","Visual Studio 14 2015","Visual Studio 12 2013","Visual Studio 11 2012")]
+#    $GENERATOR = "Visual Studio 15 2017",
+    [ValidateSet("Visual Studio 16 2019", "Visual Studio 15 2017","Visual Studio 14 2015","Visual Studio 12 2013","Visual Studio 11 2012")]
+    $GENERATOR = "Visual Studio 16 2019",    
 
     [parameter(Mandatory=$False)]
     [String]
@@ -103,13 +108,17 @@ function Get-Batchfile ($file) {
 }
 
 # Enables access to Visual Studio variables via "vsvars32.bat"
-function Set-VS12()
+#function Set-VS12()
+function Set-VS16()
 {
     Try {
-        $vs12comntools = (Get-ChildItem env:VS120COMNTOOLS).Value
-        $batchFile = [System.IO.Path]::Combine($vs12comntools, "vsvars32.bat")
+#        $vs12comntools = (Get-ChildItem env:VS120COMNTOOLS).Value
+#        $batchFile = [System.IO.Path]::Combine($vs12comntools, "vsvars32.bat")
+        $vs14comntools = (Get-ChildItem env:VS140COMNTOOLS).Value
+        $batchFile = [System.IO.Path]::Combine($vs14comntools, "vsvars32.bat")	
         Get-Batchfile $BatchFile
-        [System.Console]::Title = "Visual Studio 2010 Windows PowerShell"
+#        [System.Console]::Title = "Visual Studio 2010 Windows PowerShell"
+        [System.Console]::Title = "Visual Studio 2019 Windows PowerShell"	
      } Catch {
         $ErrorMessage = $_.Exception.Message
         L "Error: $ErrorMessage"
@@ -181,11 +190,13 @@ Function Execute() {
     $architectures = New-Object System.Collections.ArrayList
     $ARCHITECTURES_IN.Split("," ,[System.StringSplitOptions]::RemoveEmptyEntries) | ForEach {
         $_ = $_.Trim()
-        if ("x86","x64","ARM" -Contains $_) {
+#        if ("x86","x64","ARM" -Contains $_) {
+       if ("x86","x64","ARM", "ARM64" -Contains $_) {	
             $architectures.Add($_) > $null
             D "$_ is valid"
         } else {
-            Throw "$($_) is not valid! Please use x86, x64, ARM"
+#            Throw "$($_) is not valid! Please use x86, x64, ARM"
+            Throw "$($_) is not valid! Please use x86, x64, ARM, ARM64"	    
         }
     }
 
@@ -197,15 +208,18 @@ Function Execute() {
     $SRC = Get-Location
 
     $def_architectures = @{
-        "x86" = "";
+#        "x86" = "";
+        "x86" = "Win32"	
         "x64" = " Win64"
         "arm" = " ARM"
+        "arm64" = "ARM64"
     }
 
     # Setting up Visual Studio variables to enable build
     $shouldBuid = $false
     If ($BUILD.IsPresent) {
-        $shouldBuild = Set-VS12
+#        $shouldBuild = Set-VS12
+        $shouldBuild = Set-VS16	
     }
 
     foreach($plat in $platforms) {
@@ -222,9 +236,13 @@ Function Execute() {
 
                 # Set proper architecture. For MSVS this is done by selecting proper generator
                 $genName = $GENERATOR
+                $archName = ""
                 Switch ($arch) {
-                    "ARM" { $genName = $GENERATOR + $def_architectures['arm'] }
-                    "x64" { $genName = $GENERATOR + $def_architectures['x64'] }
+#                    "ARM" { $genName = $GENERATOR + $def_architectures['arm'] }
+ #                   "x64" { $genName = $GENERATOR + $def_architectures['x64'] }
+                    "ARM" { $archName = $def_architectures['arm'] }
+                    "ARM64" { $archName = $def_architectures['arm64'] }
+                    "x64" { $archName =  $def_architectures['x64'] }		    
                 }
 
                 # Constructing path to the install binaries
@@ -258,7 +276,8 @@ Function Execute() {
                 Push-Location -Path $path
 
                 L "Generating project:"
-                L "cmake -G $genName -DCMAKE_SYSTEM_NAME:String=$platName -DCMAKE_SYSTEM_VERSION:String=$vers -DCMAKE_VS_EFFECTIVE_PLATFORMS:String=$arch -DCMAKE_INSTALL_PREFIX:PATH=$installPath $SRC"
+#                L "cmake -G $genName -DCMAKE_SYSTEM_NAME:String=$platName -DCMAKE_SYSTEM_VERSION:String=$vers -DCMAKE_VS_EFFECTIVE_PLATFORMS:String=$arch -DCMAKE_INSTALL_PREFIX:PATH=$installPath $SRC"
+                L "cmake -G `"$genName`" -A $archName  -DCMAKE_SYSTEM_NAME:String=$platName -DCMAKE_SYSTEM_VERSION:String=$vers -DCMAKE_VS_EFFECTIVE_PLATFORMS:String=$arch -DCMAKE_INSTALL_PREFIX:PATH=$installPath $SRC"		
                 cmake -G $genName -DCMAKE_SYSTEM_NAME:String=$platName -DCMAKE_SYSTEM_VERSION:String=$vers -DCMAKE_VS_EFFECTIVE_PLATFORMS:String=$arch -DCMAKE_INSTALL_PREFIX:PATH=$installPath $SRC
                 L "-----------------------------------------------"
 
